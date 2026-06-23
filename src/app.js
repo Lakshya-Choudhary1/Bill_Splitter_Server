@@ -33,8 +33,12 @@ app.use(express.urlencoded({ extended: true }));
 /*
      ROUTES
 */
-app.get("/test", (req, res) => {
-  res.send("Hello World");
+app.get("/health", (req, res) => {
+  return res.status(200).json({
+    status: "success",
+    message: "Server is running",
+    time: new Date()
+  });
 });
 
 export default app;
