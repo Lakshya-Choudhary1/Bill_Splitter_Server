@@ -10,6 +10,7 @@ const env = {
     process.env.NODE_ENV === "development"
       ? "http://localhost:5173"
       : process.env.CLIENT_URL || "https://bill-splitter-frontend.vercel.app",
+    HEALTH_CHECK_URL: process.env.HEALTH_CHECK_URL || "https://bill-splitter-frontend.vercel.app/health",
 };
 
 console.log("Client URL:", env.CLIENT_URL);
