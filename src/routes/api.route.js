@@ -1,6 +1,6 @@
 import {Router} from "express";
 
-import authRoutes from "./subroute/auth.routes.js";
+import authRoutes from "./subRoute/auth.routes.js";
 // import groupRoutes from "./subroute/group.routes.js";
 // import invitationRoutes from "./subroute/invitation.routes.js";
 // import expenseRoutes from "./subroute/expense.routes.js";
