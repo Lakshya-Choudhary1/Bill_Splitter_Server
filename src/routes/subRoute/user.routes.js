@@ -14,7 +14,7 @@ import {
   checkAuth,
   getProfileById,
   updateProfile
-} from "../../controllers/auth.controller.js";
+} from "../../controllers/user.controller.js";
 import env from "../../config/env.js";
 
 const router = Router();
