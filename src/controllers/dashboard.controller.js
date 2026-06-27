@@ -1,0 +1,8 @@
+
+function getTotalSpend(){
+
+}
+
+function getPendingPayments(){
+
+}
