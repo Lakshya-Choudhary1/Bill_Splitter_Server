@@ -20,7 +20,7 @@ app.post(
   express.raw({ type: "application/json" }),
   razorpayWebhook,
 );
-
+app.set("trust proxy", 1);
 // Global security, parsing, session, and authentication middleware.
 app.use(helmet({}));
 app.use(
