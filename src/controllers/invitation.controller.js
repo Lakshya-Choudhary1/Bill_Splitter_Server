@@ -106,6 +106,18 @@ export const createInvitation = async (req, res) => {
       [groupId, userId, memberId, "pending"],
     );
 
+    // =========================
+    // Socket notification
+    // =========================
+
+    const io = req.app.get("io");
+
+    io.to(`user-${memberId}`).emit("new-invitation", {
+      groupId,
+      invitedBy: userId,
+      message: "You received a new group invitation",
+    });
+
     return res.status(201).json({
       message: "Invitation sent successfully.",
     });
@@ -245,6 +257,18 @@ export const acceptInvitation = async (req, res) => {
       `,
       [invitationId],
     );
+
+    // =========================
+    // Socket notification
+    // =========================
+
+    const io = req.app.get("io");
+
+    io.to(`group-${invite.group_id}`).emit("member-joined", {
+      userId,
+      groupId: invite.group_id,
+      message: "A new member joined the group",
+    });
 
     return res.status(200).json({
       message: "Invitation accepted.",

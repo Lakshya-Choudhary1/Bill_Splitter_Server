@@ -169,6 +169,17 @@ export const razorpayWebhook = async (req, res) => {
       ],
     );
 
+    // =========================
+    // Socket notification
+    // =========================
+
+    const io = req.app.get("io");
+
+    io.to(`group-${groupId}`).emit("settlement-created", {
+      settlement: result.rows[0],
+      message: "New payment recorded",
+    });
+
     return res.json({
       received: true,
     });

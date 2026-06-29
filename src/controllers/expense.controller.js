@@ -65,10 +65,21 @@ export const createExpense = async (req, res) => {
         amount
       )
       VALUES ($1, $2, $3, $4, $5)
-      RETURNING id
+      RETURNING *
       `,
       [groupId, userId, title, description, amount],
     );
+
+    // =========================
+    // Socket notification
+    // =========================
+
+    const io = req.app.get("io");
+
+    io.to(`group-${groupId}`).emit("expense-created", {
+      expense: result.rows[0],
+      message: "New expense added",
+    });
 
     const expenses = expense.rows[0];
     const splitAmount = amount / (members.rows.length + 1);
@@ -263,6 +274,17 @@ export const deleteExpense = async (req, res) => {
       `,
       [expenseId],
     );
+
+    // =========================
+    // Socket notification
+    // =========================
+
+    const io = req.app.get("io");
+
+    io.to(`group-${deletedExpense.group_id}`).emit("expense-deleted", {
+      expenseId: deletedExpense.id,
+      message: "Expense deleted",
+    });
 
     return res.status(200).json({
       message: "Expense deleted successfully",

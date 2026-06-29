@@ -7,17 +7,17 @@ import {
   getExpenses,
   getSplits,
 } from "../../controllers/expense.controller.js";
-import userAuth from "../../middlewares/userAuth.middleware.js";
+import userAuthMiddleware from "../../middlewares/userAuth.middleware.js";
 
 const router = Router();
 
 // Expense routes.
-router.post("/groups/:groupId", userAuth, createExpense);
-router.get("/groups/:groupId", userAuth, getExpenses);
-router.get("/:expenseId", userAuth, getExpenseById);
-router.delete("/:expenseId", userAuth, deleteExpense);
+router.post("/group/:groupId", userAuthMiddleware, createExpense);
+router.get("/group/:groupId", userAuthMiddleware, getExpenses);
+router.get("/:expenseId", userAuthMiddleware, getExpenseById);
+router.delete("/:expenseId", userAuthMiddleware, deleteExpense);
 
 // Split routes.
-router.get("/:expenseId/splits", userAuth, getSplits);
+router.get("/:expenseId/split", userAuthMiddleware, getSplits);
 
 export default router;

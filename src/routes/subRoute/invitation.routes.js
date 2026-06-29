@@ -6,14 +6,14 @@ import {
   getInvitations,
   rejectInvitation,
 } from "../../controllers/invitation.controller.js";
-import userAuth from "../../middlewares/userAuth.middleware.js";
+import userAuthMiddleware from "../../middlewares/userAuth.middleware.js";
 
 const router = Router();
 
 // Invitation routes.
-router.post("/group/:groupId/invite", userAuth, createInvitation);
-router.get("/", userAuth, getInvitations);
-router.post("/:invitationId/accept", userAuth, acceptInvitation);
-router.post("/:invitationId/reject", userAuth, rejectInvitation);
+router.post("/group/:groupId/invite", userAuthMiddleware, createInvitation);
+router.get("/", userAuthMiddleware, getInvitations);
+router.post("/:invitationId/accept", userAuthMiddleware, acceptInvitation);
+router.post("/:invitationId/reject", userAuthMiddleware, rejectInvitation);
 
 export default router;

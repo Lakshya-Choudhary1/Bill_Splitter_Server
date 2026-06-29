@@ -176,6 +176,17 @@ export const updateGroup = async (req, res) => {
       [name, description, currency, group_id],
     );
 
+    // =========================
+    // Socket notification
+    // =========================
+
+    const io = req.app.get("io");
+
+    io.to(`group-${groupId}`).emit("group-updated", {
+      group: result.rows[0],
+      message: "Group updated",
+    });
+
     return res.status(200).json({
       message: "Group updated",
       group: result.rows[0],
@@ -231,6 +242,13 @@ export const deleteGroup = async (req, res) => {
         message: "Group not found",
       });
     }
+
+    const io = req.app.get("io");
+
+    io.to(`group-${groupId}`).emit("group-deleted", {
+      groupId,
+      message: "Group deleted",
+    });
 
     return res.status(200).json({
       message: "Group deleted successfully",
@@ -356,6 +374,17 @@ export const removeMember = async (req, res) => {
       `,
       [groupId, memberId],
     );
+
+    // =========================
+    // Socket notification
+    // =========================
+
+    const io = req.app.get("io");
+
+    io.to(`group-${groupId}`).emit("member-removed", {
+      userId: memberId,
+      message: "A member was removed",
+    });
 
     return res.status(200).json({
       message: "Member removed successfully.",

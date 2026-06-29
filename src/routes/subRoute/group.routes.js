@@ -22,8 +22,8 @@ router.patch("/:id", userAuthMiddleware, updateGroup);
 router.delete("/:id", userAuthMiddleware, deleteGroup);
 
 // Group member routes.
-router.get("/:groupId/members", userAuthMiddleware, getMembers);
-router.post("/:groupId/members/:memberId", userAuthMiddleware, addMember);
-router.delete("/:groupId/members/:memberId", userAuthMiddleware, removeMember);
+router.get("/:groupId/member", userAuthMiddleware, getMembers);
+router.post("/:groupId/member/:memberId", userAuthMiddleware, addMember);
+router.delete("/:groupId/member/:memberId", userAuthMiddleware, removeMember);
 
 export default router;
