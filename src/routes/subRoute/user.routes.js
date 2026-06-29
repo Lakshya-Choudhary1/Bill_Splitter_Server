@@ -1,46 +1,38 @@
 import { Router } from "express";
 import passport from "passport";
 
-import userAuthMiddleware from "../../middlewares/userAuth.middleware.js"
-
+import env from "../../config/env.js";
 import {
-  register,
+  checkAuth,
+  forgotPassword,
+  getProfileById,
   login,
   logout,
-  verifyEmail,
-  forgotPassword,
+  register,
   resendVerifyEmailToken,
   resetPassword,
-  checkAuth,
-  getProfileById,
-  updateProfile
+  updateProfile,
+  verifyEmail,
 } from "../../controllers/user.controller.js";
-import env from "../../config/env.js";
+import userAuthMiddleware from "../../middlewares/userAuth.middleware.js";
 
 const router = Router();
 
+// Local authentication.
 router.post("/register", register);
-
 router.post("/verifyEmail", verifyEmail);
 router.post("/resendVerifyEmailToken", resendVerifyEmailToken);
-
 router.post("/login", login);
 router.get("/logout", logout);
-
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPassword);
 
-router.get("/profile",userAuthMiddleware,checkAuth)
+// Profile routes.
+router.get("/profile", userAuthMiddleware, checkAuth);
+router.get("/profile/:id", userAuthMiddleware, getProfileById);
+router.patch("/profile", userAuthMiddleware, updateProfile);
 
-router.get("/profile/:id",userAuthMiddleware,getProfileById);
-
-//update user profile
-router.patch("/profile",userAuthMiddleware,updateProfile);
-
-
-// ======================
-// Google Login
-// ======================
+// Google OAuth login.
 router.get(
   "/google",
   passport.authenticate("googleStrategy", {
@@ -48,19 +40,14 @@ router.get(
   }),
 );
 
-// ======================
-// Google Callback
-// ======================
 router.get(
   "/google/callback",
-
   passport.authenticate("googleStrategy", {
     failureRedirect: env.CLIENT_URL,
   }),
-
   (req, res) => {
     res.redirect(env.CLIENT_URL);
-  }
+  },
 );
 
 export default router;

@@ -1,8 +1,9 @@
 import nodemailer from "nodemailer";
+
 import env from "../config/env.js";
 import {
-  verificationTemplate,
   forgotPasswordTemplate,
+  verificationTemplate,
 } from "./templates/template.js";
 
 const { NODEMAILER_EMAIL, NODEMAILER_EMAIL_PASSWORD } = env;
@@ -15,6 +16,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+// Send the one-time code used during account verification.
 const sendVerificationEmail = async (email, name, token) => {
   try {
     const mailOptions = {
@@ -23,28 +25,31 @@ const sendVerificationEmail = async (email, name, token) => {
       subject: "Email Verification For Bill Splitter",
       html: verificationTemplate(name, token),
     };
-    const res = await transporter.sendMail(mailOptions);
-    console.log(res.messageId);
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log(result.messageId);
   } catch (error) {
     console.error("Error sending verification email:", error);
     throw new Error("Failed to send verification email");
   }
 };
 
+// Send the password reset link to the requested account email.
 const sendForgotPasswordEmail = async (email, link) => {
   try {
     const mailOptions = {
       from: NODEMAILER_EMAIL,
       to: email,
       subject: "Password Reset For Bill Splitter",
-      html: forgotPasswordTemplate(link),
+      html: forgotPasswordTemplate(email, link),
     };
-    const res = await transporter.sendMail(mailOptions);
-    console.log(res.messageId);
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log(result.messageId);
   } catch (error) {
     console.error("Error sending forgot password email:", error);
     throw new Error("Failed to send forgot password email");
   }
 };
 
-export { sendVerificationEmail, sendForgotPasswordEmail };
+export { sendForgotPasswordEmail, sendVerificationEmail };

@@ -1,19 +1,18 @@
-import {Router} from "express";
+import { Router } from "express";
 
+import expenseRoutes from "./subRoute/expense.routes.js";
+import groupRoutes from "./subRoute/group.routes.js";
+import invitationRoutes from "./subRoute/invitation.routes.js";
+import settlementRoutes from "./subRoute/settlement.routes.js";
 import userRoutes from "./subRoute/user.routes.js";
-// import groupRoutes from "./subroute/group.routes.js";
-// import invitationRoutes from "./subroute/invitation.routes.js";
-// import expenseRoutes from "./subroute/expense.routes.js";
-// import settlementRoutes from "./subroute/settlement.routes.js";
-// import dashboardRoutes from "./subroute/dashboard.routes.js";
 
 const router = Router();
 
-router.use("/user",userRoutes);
-// router.use("/groups",groupRoutes);
-// router.use("/invitations",invitationRoutes);
-// router.use("/expenses",expenseRoutes);
-// router.use("/settlements",settlementRoutes);
-// router.use("/dashboard",dashboardRoutes);
+// Main API route groups.
+router.use("/user", userRoutes);
+router.use("/group", groupRoutes);
+router.use("/invitation", invitationRoutes);
+router.use("/expense", expenseRoutes);
+router.use("/settlement", settlementRoutes);
 
 export default router;

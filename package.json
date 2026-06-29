@@ -1,7 +1,7 @@
 {
   "name": "bill_splitter_server",
   "version": "1.0.0",
-  "description": "This directory contain Backend services of bill_splitter_Client Project.",
+  "description": "This directory contains backend services of the bill_splitter_Client project.",
   "license": "ISC",
   "author": "Lakshya Choudhary",
   "type": "module",
@@ -9,7 +9,7 @@
   "scripts": {
     "build": "npm install",
     "start": "node index.js",
-    "dev": "nodemon index.js "
+    "dev": "nodemon index.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
@@ -21,10 +21,12 @@
     "helmet": "^8.2.0",
     "jsonwebtoken": "^9.0.3",
     "nanoid": "^5.1.16",
+    "ngrok": "^5.0.0-beta.2",
     "nodemailer": "^9.0.1",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "pg": "^8.22.0",
+    "razorpay": "^2.9.6",
     "validator": "^13.15.35"
   },
   "devDependencies": {

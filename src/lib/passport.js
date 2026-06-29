@@ -1,24 +1,21 @@
+import { nanoid } from "nanoid";
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
-import { query } from "../database/pg.js";
-import { nanoid } from "nanoid";
+
 import env from "../config/env.js";
+import { query } from "../database/pg.js";
 
 passport.use(
   "googleStrategy",
-
   new GoogleStrategy(
     {
       clientID: env.GOOGLE_CLIENT_ID,
       clientSecret: env.GOOGLE_CLIENT_SECRET,
       callbackURL: env.GOOGLE_CALLBACK_URL,
     },
-
     async (accessToken, refreshToken, profile, done) => {
       try {
         const email = profile.emails?.[0]?.value;
-
-        console.log(profile);
 
         if (!email) {
           return done(null, false);
@@ -29,14 +26,15 @@ passport.use(
 
         const result = await query(
           `
-          SELECT 
+          SELECT
             id,
             name,
             email,
             is_verified,
             upi_id,
             avatar_url,
-            invite_code
+            invite_code,
+            currency
           FROM users
           WHERE email=$1
           `,
@@ -48,11 +46,11 @@ passport.use(
         if (result.rowCount > 0) {
           user = result.rows[0];
 
-          // if local user later logs in with google
+          // Convert an existing local account into a verified Google account.
           await query(
             `
             UPDATE users
-            SET 
+            SET
               auth_provider='google',
               is_verified=true,
               avatar_url=$1
@@ -74,7 +72,7 @@ passport.use(
               is_verified,
               invite_code
             )
-            VALUES($1,$2,$3,$4,$5,$6)
+            VALUES ($1, $2, $3, $4, $5, $6)
             RETURNING
               id,
               name,
@@ -91,37 +89,36 @@ passport.use(
           user = newUser.rows[0];
         }
 
-        // sends user to serializeUser
-        done(null, user);
+        return done(null, user);
       } catch (err) {
-        done(err, null);
+        return done(err, null);
       }
     },
   ),
 );
 
-// session storage
+// Store only the user id in the session cookie.
 passport.serializeUser((user, done) => {
   done(null, user.id);
 });
 
-// restore user on every request
+// Restore the current user from the database for session requests.
 passport.deserializeUser(async (id, done) => {
   try {
     const result = await query(
       `
-        SELECT
-          id,
-          name,
-          email,
-          is_verified,
-          upi_id,
-          avatar_url,
-          invite_code,
-          currency
-        FROM users
-        WHERE id=$1
-        `,
+      SELECT
+        id,
+        name,
+        email,
+        is_verified,
+        upi_id,
+        avatar_url,
+        invite_code,
+        currency
+      FROM users
+      WHERE id=$1
+      `,
       [id],
     );
 
@@ -129,8 +126,8 @@ passport.deserializeUser(async (id, done) => {
       return done(null, false);
     }
 
-    done(null, result.rows[0]);
+    return done(null, result.rows[0]);
   } catch (err) {
-    done(err, null);
+    return done(err, null);
   }
 });

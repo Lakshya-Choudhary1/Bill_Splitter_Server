@@ -1,40 +1,31 @@
-import { query } from "../database/pg.js";
 import { nanoid } from "nanoid";
 
-import createUserTokenAndSetCookie from "../utils/createUserTokenAndSetCookie.js";
-
+import env from "../config/env.js";
+import { query } from "../database/pg.js";
 import { bcryptCompare, bcryptHash } from "../helper/bcrypt.js";
 import { validateEmail } from "../helper/validator.js";
-
-import env from "../config/env.js";
-
-//EMAIL SERVICES
 import {
-  sendVerificationEmail,
   sendForgotPasswordEmail,
+  sendVerificationEmail,
 } from "../services/nodemailer.js";
+import createUserTokenAndSetCookie from "../utils/createUserTokenAndSetCookie.js";
 
-// =============================
-// REGISTER USER
-// =============================
+// Register a new local user and send the email verification code.
 export const register = async (req, res) => {
   const { name, email, password, upi_id } = req.body;
 
-  // Check required fields
   if (!name?.trim() || !email?.trim() || !password?.trim() || !upi_id?.trim()) {
     return res.status(400).json({
       message: "INVALID CREDENTIALS",
     });
   }
 
-  // Password validation
   if (password.length < 6) {
     return res.status(400).json({
       message: "PASSWORD LENGTH SHOULD BE AT LEAST 6",
     });
   }
 
-  // Email validation
   const isValidEmail = await validateEmail(email);
 
   if (!isValidEmail) {
@@ -46,7 +37,6 @@ export const register = async (req, res) => {
   try {
     const normalizedEmail = email.toLowerCase();
 
-    // Check if user already exists
     const existingUser = await query("SELECT id FROM users WHERE email=$1", [
       normalizedEmail,
     ]);
@@ -57,35 +47,25 @@ export const register = async (req, res) => {
       });
     }
 
-    // Hash password before storing
     const password_hashed = await bcryptHash(password);
-
-    // Generate invite code
     const invite_code = nanoid(env.INVITE_CODE_LENGTH);
-
-    // Generate email verification token
     const verification_token = nanoid(env.VERIFICATION_TOKEN_LENGTH);
-
-    // Token expires after 15 minutes
     const verification_token_expiry = new Date(Date.now() + 15 * 60 * 1000);
 
-    // Create user
     const result = await query(
       `
-        INSERT INTO users
-        (
-            name,
-            email,
-            password_hashed,
-            upi_id,
-            invite_code,
-            verification_token,
-            verification_token_expiry
-        )
-        VALUES
-        ($1,$2,$3,$4,$5,$6,$7)
-
-        RETURNING 
+      INSERT INTO users
+      (
+        name,
+        email,
+        password_hashed,
+        upi_id,
+        invite_code,
+        verification_token,
+        verification_token_expiry
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING
         id,
         name,
         email,
@@ -93,8 +73,8 @@ export const register = async (req, res) => {
         invite_code,
         is_verified,
         avatar_url,
-        currency;
-        `,
+        currency
+      `,
       [
         name,
         normalizedEmail,
@@ -107,8 +87,6 @@ export const register = async (req, res) => {
     );
 
     await sendVerificationEmail(normalizedEmail, name, verification_token);
-
-    // Create JWT cookie
     await createUserTokenAndSetCookie(res, result.rows[0].id);
 
     return res.status(201).json({
@@ -124,9 +102,7 @@ export const register = async (req, res) => {
   }
 };
 
-// =============================
-// VERIFY EMAIL
-// =============================
+// Verify a local account with the token sent by email.
 export const verifyEmail = async (req, res) => {
   const { token } = req.body;
 
@@ -137,17 +113,14 @@ export const verifyEmail = async (req, res) => {
   }
 
   try {
-    // Find user with token
     const result = await query(
       `
-        SELECT 
+      SELECT
         id,
         verification_token_expiry
-
-        FROM users
-
-        WHERE verification_token=$1
-        `,
+      FROM users
+      WHERE verification_token=$1
+      `,
       [token],
     );
 
@@ -157,25 +130,21 @@ export const verifyEmail = async (req, res) => {
       });
     }
 
-    // Check token expiry
     if (new Date(result.rows[0].verification_token_expiry) < new Date()) {
       return res.status(400).json({
         message: "TOKEN EXPIRED",
       });
     }
 
-    // Verify user
     await query(
       `
-        UPDATE users
-
-        SET
+      UPDATE users
+      SET
         is_verified=true,
         verification_token=NULL,
         verification_token_expiry=NULL
-
-        WHERE id=$1
-        `,
+      WHERE id=$1
+      `,
       [result.rows[0].id],
     );
 
@@ -191,9 +160,7 @@ export const verifyEmail = async (req, res) => {
   }
 };
 
-// =============================
-// LOGIN USER
-// =============================
+// Log in a local user and set the JWT cookie.
 export const login = async (req, res) => {
   const { email, password } = req.body;
 
@@ -220,9 +187,21 @@ export const login = async (req, res) => {
   try {
     const normalizedEmail = email.toLowerCase();
 
-    // Find user
     const result = await query(
-      "SELECT id,currency,password_hashed,avatar_url,name,email,upi_id,invite_code,is_verified FROM users WHERE email=$1",
+      `
+      SELECT
+        id,
+        currency,
+        password_hashed,
+        avatar_url,
+        name,
+        email,
+        upi_id,
+        invite_code,
+        is_verified
+      FROM users
+      WHERE email=$1
+      `,
       [normalizedEmail],
     );
 
@@ -233,8 +212,6 @@ export const login = async (req, res) => {
     }
 
     const user = result.rows[0];
-
-    // Compare password
     const isPasswordValid = await bcryptCompare(password, user.password_hashed);
 
     if (!isPasswordValid) {
@@ -243,7 +220,6 @@ export const login = async (req, res) => {
       });
     }
 
-    // Create JWT cookie
     await createUserTokenAndSetCookie(res, user.id);
 
     return res.status(200).json({
@@ -254,7 +230,7 @@ export const login = async (req, res) => {
       invite_code: user.invite_code,
       is_verified: user.is_verified,
       avatar_url: user.avatar_url,
-      currency:user.currency
+      currency: user.currency,
     });
   } catch (err) {
     console.log(err);
@@ -265,16 +241,11 @@ export const login = async (req, res) => {
   }
 };
 
-// =============================
-// LOGOUT USER
-// =============================
-
+// Clear both JWT and Passport session authentication.
 export const logout = async (req, res) => {
   try {
-    // remove JWT cookie if exists
     res.clearCookie(env.JWT_TOKEN_NAME);
 
-    // Passport logout
     if (req.isAuthenticated?.()) {
       await new Promise((resolve, reject) => {
         req.logout((err) => {
@@ -282,12 +253,11 @@ export const logout = async (req, res) => {
             return reject(err);
           }
 
-          resolve();
+          return resolve();
         });
       });
     }
 
-    // Destroy session
     if (req.session) {
       await new Promise((resolve, reject) => {
         req.session.destroy((err) => {
@@ -295,7 +265,7 @@ export const logout = async (req, res) => {
             return reject(err);
           }
 
-          resolve();
+          return resolve();
         });
       });
 
@@ -314,10 +284,7 @@ export const logout = async (req, res) => {
   }
 };
 
-// =============================
-// RESEND EMAIL VERIFICATION TOKEN
-// =============================
-
+// Send a fresh email verification token to an unverified account.
 export const resendVerifyEmailToken = async (req, res) => {
   const { email } = req.body;
 
@@ -338,18 +305,15 @@ export const resendVerifyEmailToken = async (req, res) => {
   const normalizedEmail = email.toLowerCase();
 
   try {
-    // Find user
     const result = await query(
       `
-            SELECT 
-            id,
-            is_verified,
-            name
-
-            FROM users
-
-            WHERE email=$1
-            `,
+      SELECT
+        id,
+        is_verified,
+        name
+      FROM users
+      WHERE email=$1
+      `,
       [normalizedEmail],
     );
 
@@ -359,30 +323,23 @@ export const resendVerifyEmailToken = async (req, res) => {
       });
     }
 
-    // Already verified
     if (result.rows[0].is_verified) {
       return res.status(400).json({
         message: "EMAIL ALREADY VERIFIED",
       });
     }
 
-    // create new token
     const verification_token = nanoid(env.VERIFICATION_TOKEN_LENGTH);
-
-    // expires in 15 minutes
     const verification_token_expiry = new Date(Date.now() + 15 * 60 * 1000);
 
-    // update token
     await query(
       `
-            UPDATE users
-
-            SET 
-            verification_token=$1,
-            verification_token_expiry=$2
-
-            WHERE id=$3
-            `,
+      UPDATE users
+      SET
+        verification_token=$1,
+        verification_token_expiry=$2
+      WHERE id=$3
+      `,
       [verification_token, verification_token_expiry, result.rows[0].id],
     );
 
@@ -404,21 +361,16 @@ export const resendVerifyEmailToken = async (req, res) => {
   }
 };
 
-// =============================
-// FORGOT PASSWORD
-// =============================
-
+// Create or reuse a password reset token and email the reset link.
 export const forgotPassword = async (req, res) => {
   const { email } = req.body;
 
-  // Check email
   if (!email?.trim()) {
     return res.status(400).json({
       message: "EMAIL REQUIRED",
     });
   }
 
-  // Validate email
   const isValidEmail = await validateEmail(email);
 
   if (!isValidEmail) {
@@ -430,16 +382,13 @@ export const forgotPassword = async (req, res) => {
   const normalizedEmail = email.toLowerCase();
 
   try {
-    // Find user
     const result = await query(
       `
-      SELECT 
-      id,
-      reset_password_token,
-      reset_password_token_expiry
-
+      SELECT
+        id,
+        reset_password_token,
+        reset_password_token_expiry
       FROM users
-
       WHERE email=$1
       `,
       [normalizedEmail],
@@ -453,14 +402,12 @@ export const forgotPassword = async (req, res) => {
 
     const user = result.rows[0];
 
-    // Check if existing reset token is still valid
     if (
       user.reset_password_token &&
       new Date(user.reset_password_token_expiry) > new Date()
     ) {
       const link = `${env.CLIENT_URL}/reset-password/${user.reset_password_token}`;
 
-      // Send existing reset link
       await sendForgotPasswordEmail(normalizedEmail, link);
 
       return res.status(200).json({
@@ -468,30 +415,22 @@ export const forgotPassword = async (req, res) => {
       });
     }
 
-    // Generate new reset token
     const reset_password_token = nanoid(env.RESET_PASSWORD_TOKEN_LENGTH);
-
-    // Token expires after 15 minutes
     const reset_password_token_expiry = new Date(Date.now() + 15 * 60 * 1000);
 
-    // Save token in database
     await query(
       `
       UPDATE users
-
       SET
-      reset_password_token=$1,
-      reset_password_token_expiry=$2
-
+        reset_password_token=$1,
+        reset_password_token_expiry=$2
       WHERE email=$3
       `,
       [reset_password_token, reset_password_token_expiry, normalizedEmail],
     );
 
-    // Create reset URL
     const link = `${env.CLIENT_URL}/reset-password/${reset_password_token}`;
 
-    // Send email
     await sendForgotPasswordEmail(normalizedEmail, link);
 
     return res.status(200).json({
@@ -505,21 +444,17 @@ export const forgotPassword = async (req, res) => {
     });
   }
 };
-// =============================
-// RESET PASSWORD
-// =============================
 
+// Reset the password once a valid reset token is provided.
 export const resetPassword = async (req, res) => {
   const { token, password } = req.body;
 
-  // Validate token
   if (!token?.trim()) {
     return res.status(400).json({
       message: "TOKEN REQUIRED",
     });
   }
 
-  // Validate password
   if (!password?.trim()) {
     return res.status(400).json({
       message: "PASSWORD REQUIRED",
@@ -533,17 +468,14 @@ export const resetPassword = async (req, res) => {
   }
 
   try {
-    // Find user using reset token
     const result = await query(
       `
-        SELECT 
+      SELECT
         id,
         reset_password_token_expiry
-
-        FROM users
-
-        WHERE reset_password_token=$1
-        `,
+      FROM users
+      WHERE reset_password_token=$1
+      `,
       [token],
     );
 
@@ -555,28 +487,23 @@ export const resetPassword = async (req, res) => {
 
     const user = result.rows[0];
 
-    // Check token expiry
     if (new Date(user.reset_password_token_expiry) < new Date()) {
       return res.status(400).json({
         message: "TOKEN EXPIRED",
       });
     }
 
-    // Hash new password
     const password_hashed = await bcryptHash(password);
 
-    // Update password and remove token
     await query(
       `
-        UPDATE users
-
-        SET
+      UPDATE users
+      SET
         password_hashed=$1,
         reset_password_token=NULL,
         reset_password_token_expiry=NULL
-
-        WHERE id=$2
-        `,
+      WHERE id=$2
+      `,
       [password_hashed, user.id],
     );
 
@@ -592,6 +519,7 @@ export const resetPassword = async (req, res) => {
   }
 };
 
+// Return the authenticated profile stored by the auth middleware.
 export const checkAuth = async (req, res) => {
   try {
     const user = req.user;
@@ -620,6 +548,7 @@ export const checkAuth = async (req, res) => {
   }
 };
 
+// Fetch another user's public profile details.
 export const getProfileById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -648,7 +577,7 @@ export const getProfileById = async (req, res) => {
         avatar_url,
         currency
       FROM users
-      WHERE id=$1;
+      WHERE id=$1
       `,
       [Number(id)],
     );
@@ -671,20 +600,11 @@ export const getProfileById = async (req, res) => {
   }
 };
 
-
-export const updateProfile = async(req,res) => {
-
+// Update the logged-in user's editable profile fields.
+export const updateProfile = async (req, res) => {
   try {
-
     const userId = req.user.id;
-
-    const {
-      name,
-      upi_id,
-      avatar_url,
-      currency
-    } = req.body;
-
+    const { name, upi_id, avatar_url, currency } = req.body;
 
     const result = await query(
       `
@@ -704,37 +624,24 @@ export const updateProfile = async(req,res) => {
         currency,
         is_verified
       `,
-      [
-        name,
-        upi_id,
-        avatar_url,
-        currency,
-        userId
-      ]
+      [name, upi_id, avatar_url, currency, userId],
     );
 
-
-    if(result.rowCount === 0){
+    if (result.rowCount === 0) {
       return res.status(404).json({
-        message:"User not found"
+        message: "User not found",
       });
     }
 
-
     return res.status(200).json({
-      message:"Profile updated",
-      user:result.rows[0]
+      message: "Profile updated",
+      user: result.rows[0],
     });
-
-
-  } catch(err) {
-
+  } catch (err) {
     console.error(err);
 
     return res.status(500).json({
-      message:"Internal Server Error"
+      message: "Internal Server Error",
     });
-
   }
-
 };

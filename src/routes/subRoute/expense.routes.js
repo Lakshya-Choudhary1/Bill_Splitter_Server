@@ -1,39 +1,23 @@
-// import { Router } from "express";
-// const router = Router();
+import { Router } from "express";
 
+import {
+  createExpense,
+  deleteExpense,
+  getExpenseById,
+  getExpenses,
+  getSplits,
+} from "../../controllers/expense.controller.js";
+import userAuth from "../../middlewares/userAuth.middleware.js";
 
-// // expense
+const router = Router();
 
-// router.post(
-// "/groups/:groupId"
-// );
+// Expense routes.
+router.post("/groups/:groupId", userAuth, createExpense);
+router.get("/groups/:groupId", userAuth, getExpenses);
+router.get("/:expenseId", userAuth, getExpenseById);
+router.delete("/:expenseId", userAuth, deleteExpense);
 
+// Split routes.
+router.get("/:expenseId/splits", userAuth, getSplits);
 
-// router.get(
-// "/groups/:groupId"
-// );
-
-
-// router.get(
-// "/:expenseId"
-// );
-
-
-// router.put(
-// "/:expenseId"
-// );
-
-
-// router.delete(
-// "/:expenseId"
-// );
-
-
-// // splits
-
-// router.get(
-// "/:expenseId/splits"
-// );
-
-
-// export default router;
+export default router;

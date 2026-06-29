@@ -1,6 +1,7 @@
 import validator from "validator";
 
-export const validateEmail = (email) =>{
-     return validator.isEmail(email);
-}
+// Validate user email before running auth-related database queries.
+export const validateEmail = (email) => {
+  return validator.isEmail(email);
+};
 

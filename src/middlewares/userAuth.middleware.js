@@ -4,17 +4,12 @@ import compareJwtToken from "../utils/compareJwtToken.js";
 
 const userAuth = async (req, res, next) => {
   try {
-
-    // ======================
-    // 1. Passport Session
-    // ======================
+    // Passport stores Google-authenticated users in the active session.
     if (req.isAuthenticated?.()) {
       return next();
     }
 
-    // ======================
-    // 2. JWT Cookie
-    // ======================
+    // Local login users are authenticated through the signed JWT cookie.
     const token = req.cookies?.[env.JWT_TOKEN_NAME];
 
     if (!token) {
@@ -55,7 +50,7 @@ const userAuth = async (req, res, next) => {
 
     req.user = result.rows[0];
 
-    next();
+    return next();
   } catch (err) {
     console.error(err);
 

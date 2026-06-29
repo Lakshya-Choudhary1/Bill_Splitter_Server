@@ -109,10 +109,7 @@ CREATE TABLE IF NOT EXISTS group_invitations(
      CHECK(status IN 
      ('pending','accepted','rejected')),
 
-     expires_at TIMESTAMP,
-
      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
      UNIQUE(group_id,invited_user)
 );
 
@@ -168,12 +165,11 @@ CREATE TABLE IF NOT EXISTS expense_splits(
      amount_owed NUMERIC(12,2) NOT NULL
      CHECK(amount_owed > 0),
 
+     razorpay_order_id VARCHAR(255),
 
      settled BOOLEAN DEFAULT FALSE,
 
-
      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
 
      UNIQUE(expense_id,user_id)
 );
@@ -223,7 +219,10 @@ CREATE TABLE IF NOT EXISTS settlements(
      status VARCHAR(20) DEFAULT 'completed'
      CHECK(status IN
      ('pending','completed','failed')),
-
+     
+     razorpay_order_id VARCHAR(255),
+     razorpay_payment_id VARCHAR(255),
+     paid_at TIMESTAMP,
 
      transaction_id VARCHAR(100),
 
