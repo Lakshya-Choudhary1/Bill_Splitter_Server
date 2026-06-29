@@ -371,6 +371,7 @@ export const removeMember = async (req, res) => {
 
 // Add a member directly after confirming the requester is an admin.
 export const addMember = async (req, res) => {
+  //memberid could be email or unique invite code
   const { groupId, memberId } = req.params;
   const user_id = req.user.id;
 
@@ -401,7 +402,8 @@ export const addMember = async (req, res) => {
       `
       SELECT id
       FROM users
-      WHERE id = $1
+      WHERE invite_id = $1 OR
+      email=$1;
       `,
       [memberId],
     );
