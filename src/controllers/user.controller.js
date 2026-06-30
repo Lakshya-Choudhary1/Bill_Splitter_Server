@@ -86,7 +86,7 @@ export const register = async (req, res) => {
       ],
     );
 
-    await sendVerificationEmail(normalizedEmail, name, verification_token);
+    sendVerificationEmail(normalizedEmail, name, verification_token);
     await createUserTokenAndSetCookie(res, result.rows[0].id);
 
     return res.status(201).json({
@@ -345,7 +345,7 @@ export const resendVerifyEmailToken = async (req, res) => {
       [verification_token, verification_token_expiry, result.rows[0].id],
     );
 
-    await sendVerificationEmail(
+     sendVerificationEmail(
       normalizedEmail,
       result.rows[0].name,
       verification_token,
@@ -410,7 +410,7 @@ export const forgotPassword = async (req, res) => {
     ) {
       const link = `${env.CLIENT_URL}/reset-password/${user.reset_password_token}`;
 
-      await sendForgotPasswordEmail(normalizedEmail, link);
+      sendForgotPasswordEmail(normalizedEmail, link);
 
       return res.status(200).json({
         message: "RESET TOKEN SENT TO EMAIL",
