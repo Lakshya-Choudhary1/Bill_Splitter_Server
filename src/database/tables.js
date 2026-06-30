@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(100) UNIQUE NOT NULL,
     phone VARCHAR(15) UNIQUE,
     password_hashed TEXT,
-    upi_id VARCHAR(100) UNIQUE,
+    upi_id VARCHAR(100) ,
     avatar_url TEXT,
     auth_provider VARCHAR(20) DEFAULT 'local',
     google_id VARCHAR(255) UNIQUE,

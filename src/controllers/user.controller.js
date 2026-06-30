@@ -7,7 +7,7 @@ import { validateEmail } from "../helper/validator.js";
 import {
   sendForgotPasswordEmail,
   sendVerificationEmail,
-} from "../services/nodemailer.js";
+} from "../services/resend.js";
 import createUserTokenAndSetCookie from "../utils/createUserTokenAndSetCookie.js";
 
 // Register a new local user and send the email verification code.
