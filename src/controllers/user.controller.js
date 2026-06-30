@@ -223,14 +223,16 @@ export const login = async (req, res) => {
     await createUserTokenAndSetCookie(res, user.id);
 
     return res.status(200).json({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      upi_id: user.upi_id,
-      invite_code: user.invite_code,
-      is_verified: user.is_verified,
-      avatar_url: user.avatar_url,
-      currency: user.currency,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        upi_id: user.upi_id,
+        invite_code: user.invite_code,
+        is_verified: user.is_verified,
+        avatar_url: user.avatar_url,
+        currency: user.currency,
+      },
     });
   } catch (err) {
     console.log(err);

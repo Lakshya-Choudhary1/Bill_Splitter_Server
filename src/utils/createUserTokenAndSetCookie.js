@@ -12,7 +12,7 @@ const createUserTokenAndSetCookie = async (res, userId) => {
 
   res.cookie(JWT_TOKEN_NAME, jwtToken, {
     maxAge: 1000 * 60 * 60 * 24 * 7,
-    sameSite: "none",
+    sameSite: NODE_ENV === "production" ? "none" : "lax",
     secure: NODE_ENV === "production",
     httpOnly: true,
   });
