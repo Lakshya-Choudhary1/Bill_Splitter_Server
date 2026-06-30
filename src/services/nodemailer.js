@@ -9,11 +9,16 @@ import {
 const { NODEMAILER_EMAIL, NODEMAILER_EMAIL_PASSWORD } = env;
 
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false,
   auth: {
     user: NODEMAILER_EMAIL,
     pass: NODEMAILER_EMAIL_PASSWORD,
   },
+  connectionTimeout: 10000,
+  greetingTimeout: 10000,
+  socketTimeout: 10000,
 });
 
 // Send the one-time code used during account verification.
