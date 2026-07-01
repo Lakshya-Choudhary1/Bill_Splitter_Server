@@ -38,6 +38,10 @@ const env = {
     process.env.NODE_ENV === "development"
       ? "http://localhost:5173/dashboard"
       : `${process.env.CLIENT_URL}/dashboard`,
+
+  CLIENT_DOMAIN_URL:process.env.NODE_ENV === "development"
+      ? "http://localhost:5173"
+      : `${process.env.CLIENT_URL}`,
 };
 
 export default env;

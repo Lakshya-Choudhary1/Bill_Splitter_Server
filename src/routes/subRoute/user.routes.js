@@ -13,6 +13,7 @@ import {
   resetPassword,
   updateProfile,
   verifyEmail,
+  updateAvatar
 } from "../../controllers/user.controller.js";
 import userAuthMiddleware from "../../middlewares/userAuth.middleware.js";
 
@@ -31,6 +32,7 @@ router.post("/reset-password", resetPassword);
 router.get("/profile", userAuthMiddleware, checkAuth);
 router.get("/profile/:id", userAuthMiddleware, getProfileById);
 router.patch("/profile", userAuthMiddleware, updateProfile);
+router.patch("/avatar", userAuthMiddleware, updateAvatar);
 
 // Google OAuth login.
 router.get(

@@ -594,7 +594,7 @@ export const getProfileById = async (req, res) => {
 export const updateProfile = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { name, upi_id, avatar_url, currency } = req.body;
+    const { name, upi_id, currency } = req.body;
 
     const result = await query(
       `
@@ -602,9 +602,8 @@ export const updateProfile = async (req, res) => {
       SET
         name=$1,
         upi_id=$2,
-        avatar_url=$3,
-        currency=$4
-      WHERE id=$5
+        currency=$3
+      WHERE id=$4
       RETURNING
         id,
         name,
@@ -614,7 +613,7 @@ export const updateProfile = async (req, res) => {
         currency,
         is_verified
       `,
-      [name, upi_id, avatar_url, currency, userId],
+      [name, upi_id, currency, userId],
     );
 
     if (result.rowCount === 0) {
@@ -625,11 +624,54 @@ export const updateProfile = async (req, res) => {
 
     return res.status(200).json({
       message: "Profile updated",
+      success: true,
       user: result.rows[0],
     });
   } catch (err) {
     console.error(err);
 
+    return res.status(500).json({
+      message: "Internal Server Error",
+    });
+  }
+};
+
+export const updateAvatar = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { avatar_url } = req.body;
+
+     const result = await query(
+          `
+          UPDATE users
+          SET
+            avatar_url=$1
+          WHERE id=$2   
+          RETURNING
+               id,
+               name,
+               upi_id,
+               email,
+               avatar_url,
+               currency,
+               is_verified
+          `,
+          [avatar_url, userId],
+        );
+
+     if (result.rowCount === 0) {
+          return res.status(404).json({
+               message: "User not found",
+          });
+     }    
+
+     return res.status(200).json({
+          message: "Avatar updated",
+          success: true,
+          user: result.rows[0],
+     });
+  } catch (err) {
+    console.error(err);
     return res.status(500).json({
       message: "Internal Server Error",
     });
